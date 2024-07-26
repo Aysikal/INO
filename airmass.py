@@ -1,61 +1,48 @@
-from astropy.coordinates import EarthLocation, AltAz, get_sun, get_moon, solar_system_ephemeris
+from astropy import units as u
+from astropy.coordinates import SkyCoord , EarthLocation, AltAz
 from astropy.time import Time
-import astropy.units as u
-import math 
-from astropy.coordinates import Angle
-import math
+import numpy as np
 
-observation_time = '2024-06-20 00:00:00'
-RA_hours= 18.0
-dec_deg = 30.0 
+#date and time inputs:
+print("ATTENTION: Time and date entries MUST be UTC")
+year = int(input("Enter the year: "))
+month = int(input("Enter the month (1-12): "))
+day = int(input("Enter the day (1-31): "))
+hour = int(input("Enter the hour (0-23): "))
+minute = int(input("Enter the minute (0-59): "))
 
-lat_deg = 51.19
-lon_deg = 33.40
-# Define your observer's location (INO)
-observer_location = EarthLocation(lat_deg,lon_deg)
-# Get the current UTC time
-utc_time = Time(observation_time)
+#ra and dec inputs:
+print("RA MUST be in the form of HH:MM:SS")
+RA = input("RA: ")
+print("DEC MUST be in the form of DD:MM:SS")
+DEC = input("DEC: ")
+# INO location
+latitude = '33:40:28'
+longitude = '51:19:08'
+elevation = 3600
+observer_location = EarthLocation(lat=33.674*u.deg, lon=51.3188*u.deg , height = elevation*u.meter)
 
-# Calculate the local sidereal time
-lst = utc_time.sidereal_time('apparent', 'greenwich')
+ra = RA.split(':')
+ra_hours = float(ra[0])
+ra_minutes = float(ra[1])
+ra_seconds = float(ra[2])
+ra_deg = (ra_hours * 15) + (ra_minutes * 0.25) + (ra_seconds * 0.00417)
 
+dec = DEC.split(':')
+dec_degrees = float(dec[0])
+dec_minutes = float(dec[1])
+dec_seconds = float(dec[2])
+dec_deg = dec_degrees + dec_minutes/60 + dec_seconds/3600
+ # Example: RA = 10.625 degrees, Dec = 41.2 degrees
+star_position = SkyCoord(ra=ra_deg*u.degree, dec=dec_deg*u.degree, frame='icrs')
+observing_time = Time("2024-07-17 02:00:00", scale='utc', location=observer_location)
 
-# Assuming you have the right ascension of an object (in hours), compute the hour angle
-hour_angle = lst - RA_hours * u.hourangle # format : H M S 
+    # Convert to local horizontal coordinates (AltAz frame)
+star_altaz = star_position.transform_to(AltAz(obstime=observing_time, location=observer_location))
+print("altitude of the star in degrees", star_altaz.alt.degree)
+zenith_angle = 90*u.deg - star_altaz.alt
+zenith_angle_deg = zenith_angle.to_value(u.deg)
 
-def hour_angle_to_degrees(hour_angle):
-    hour_angle_str = hour_angle.to_string()
-    # Extract hours, minutes, and seconds
-    components = hour_angle_str.split('h')[1].split('m')
-    hours, minutes, seconds = float(hour_angle_str.split('h')[0]), float(hour_angle_str.split('h')[1].split('m')[0]),float(hour_angle_str.split('h')[1].split('m')[1].split('s')[0])
-    
-    # Convert to degrees
-    total_degrees = (hours * 15) + (minutes * 0.25) + (seconds * 0.00417)
-    
-    return total_degrees
-
-hour_angle_degrees = hour_angle_to_degrees(hour_angle)
-
-def calculate_zenith_angle(HA_deg, longitude_deg, latitude_deg, declination_deg):
-    
-    # Calculate local hour angle (LHA)
-    LHA = HA_deg + longitude_deg
-    
-    # Convert latitude and declination to radians
-    lat_rad = math.radians(latitude_deg)
-    declination_rad = math.radians(declination_deg)
-    
-    # Compute zenith angle
-    cos_Z = math.sin(lat_rad) * math.sin(declination_rad) + math.cos(lat_rad) * math.cos(declination_rad) * math.cos(math.radians(LHA))
-    Z = math.degrees(math.acos(cos_Z))
-    
-    return Z
-
-zenith_angle = calculate_zenith_angle(hour_angle_degrees, lon_deg, lat_deg, dec_deg)
-print(f"Zenith angle: {zenith_angle:.2f} degrees")
-
-
-
-
-
-
+z= np.radians(zenith_angle)
+X = 1 / (np.cos(z) + 0.50572 * (6.07995 + 90 - zenith_angle_deg) ** (-1.6364))
+print("airmass" , X)
