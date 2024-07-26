@@ -13,6 +13,9 @@ from scipy.ndimage import gaussian_filter
 import cv2
 import astroalign as aa
 from scipy.optimize import curve_fit 
+from astropy import units as u
+from astropy.coordinates import SkyCoord , EarthLocation, AltAz
+from astropy.time import Time
 
 def open_fits(path):
     fitsfile = fits.open(path)
@@ -42,7 +45,7 @@ def radial_profile(data, center, box_size):
     popt, _ = curve_fit(gaussian, np.arange(len(radialprofile)), radialprofile)
     # Get the FWHM from the fitted Gaussian
     fwhm = 2.355 * popt[2]
-    return radialprofile , fwhm/2 , popt
+    return radialprofile , fwhm , popt
 
 def get_radius(image , center , HWHM , readnoise , gain, radius_step = 0.5 , inner_radius=2.5, outer_radius=3.0):
         radius_min = HWHM *1/2
@@ -77,3 +80,44 @@ def get_radius(image , center , HWHM , readnoise , gain, radius_step = 0.5 , inn
              best_brightness = corrected_brightness
 
         return best_radius , max_snr , snrs , radii
+
+def airmass(RA, DEC, lon, lat, utc_date_time):
+    observer_location = EarthLocation(lat=-29.2563*u.deg, lon=-70.738*u.deg)
+
+    RA = "13:26:47.28"
+    DEC = "-47:28:46.092"
+
+    ra = RA.split(':')
+    ra_hours = float(ra[0])
+    if ra_hours < 0:
+        sgn = -1
+    else:
+        sgn = 1
+
+    ra_minutes = float(ra[1])
+    ra_seconds = float(ra[2])
+    ra_deg = (ra_hours * 15) + sgn*(ra_minutes * 0.25) + sgn*(ra_seconds * 0.00417)
+
+    if dec_deg < 0: 
+        sgn2 = -1
+    else:
+        sgn2 = 1
+
+    dec = DEC.split(':')
+    dec_degrees = float(dec[0])
+    dec_minutes = float(dec[1])
+    dec_seconds = float(dec[2])
+    dec_deg = dec_degrees + sgn2*(dec_minutes/60) + sgn2*(dec_seconds/3600)
+
+    # Example: RA = 10.625 degrees, Dec = 41.2 degrees
+    star_position = SkyCoord(ra=ra_deg*u.degree, dec=dec_deg*u.degree, frame='icrs')
+    observing_time = Time(utc_date_time, scale='utc', location=observer_location)
+
+    # Convert to local horizontal coordinates (AltAz frame)
+    star_altaz = star_position.transform_to(AltAz(obstime=observing_time, location=observer_location))
+    zenith_angle = 90*u.deg - star_altaz.alt
+    zenith_angle_deg = zenith_angle.to_value(u.deg)
+
+    z= np.radians(zenith_angle)
+    X = 1 / (np.cos(z) + 0.50572 * (6.07995 + 90 - zenith_angle_deg) ** (-1.6364))
+    return zenith_angle, X
