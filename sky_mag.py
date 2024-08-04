@@ -92,7 +92,7 @@ import math
 def calculate_sky_brightness(fli):
     # FLI ranges from 0 to 1 (0 = New Moon, 1 = Full Moon)
     # Assume a constant offset for sky brightness (adjust as needed)
-    offset = 22.0  # Example value (mag/arcsec^2)
+    offset = 21.0  # Example value (mag/arcsec^2)
     if fli ==0: 
           sky_brightness = offset
     # Calculate sky brightness (in magnitudes per square arcsecond)
