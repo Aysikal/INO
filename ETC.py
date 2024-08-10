@@ -1,7 +1,20 @@
 import numpy as np
 from functions import airmass_function , get_fli , calculate_sky_magnitude
+import math
+from astropy.utils.data import clear_download_cache
+clear_download_cache()
+
 
 #date and time
+mode = input("choose calculator mode. enter either (snr) for snr calculator or (exp) for exposure time calculator.")
+print(mode)
+if mode == 'snr': 
+      print("ATTENTION: exposure time should be in seconds")
+      t = int(input("Enter exposure time: "))
+if mode == 'exp':
+      snr = int(input("snr: "))
+
+
 print("ATTENTION: Time and date entries MUST be UTC")
 year = int(input("Enter the year: "))
 month = int(input("Enter the month (1-12): "))
@@ -16,16 +29,13 @@ print("DEC MUST be in the form of DD:MM:SS")
 DEC = input("DEC: ")
 print("enter magnitude in the chosen filter. note that the magnitude should be in the AB system.")
 m = float(input("magnitude: "))
-
 #system 
-print("ATTENTION: exposure time should be in seconds")
-t = int(input("Enter exposure time: "))
+
 print("Binning is either 1x1 and 2x2, enter either 1 or 2 for each respectively.")
 binning = int(input("enter binning: "))
-filter = ("filter choose from u , g, r, i, z")
+filter = input("filter choose from u , g, r, i, z: ")
 
 #fixed values:
-extiction = 0.5
 seeing = 1
 pixel_scale = 0.047
 dc = 0.08
@@ -63,34 +73,95 @@ f0 = {'u': 8590.5*(10**(-11)), #watt/m2/um
      'z': 1310.5*(10**(-11))}
 
 #problem values : ----------------------------------------------------------------------------------------------------------------------------------------------------------------#
-
-E =   {'u': 0.1,
-      'g': 0.7,
-      'r': 0.75,
-      'i': 0.55,
+extiction = {'u': 0.2,
+      'g': 0.2,
+      'r': 0.2,
+      'i': 0.2,
       'z': 0.2 }
- 
-#signal -----------------------------------------------------------------------------------------------------------------------------------------------------#
-airmass = airmass_function(year, month, day, hour, minute, RA, DEC)
-npix = (np.pi*((seeing/pixel_scale)**2)) / (binning)**2
-P = ((h*c)/CW[filter])
-m_corrected = m + (airmass * extiction)
-f_nu = 10 ** (-0.4 *(m_corrected + 48.6))
-f_lambda = ((f_nu *c)/(CW[filter]**2)) * (10 **(-10)) #erg/cm2/A
-signal = (f_lambda*10**(-7) * (band_width[filter]*(10**(10)))* t * E[filter] * S *(10**4) ) / P
 
-#sky ------------------------------------------------------------------------------------------------------------------------------------------------------------#
-fli = get_fli(year, month, day, hour, minute)
+reflectivity = 0.6
+
+E =   {'u': 0.1*(reflectivity)**2 * 0.9,
+      'g': 0.7*(reflectivity)**2 * 0.9,
+      'r': 0.75*(reflectivity)**2 * 0.9,
+      'i': 0.55*(reflectivity)**2 * 0.9,
+      'z': 0.2*(reflectivity)**2 * 0.9 }
+
 offset = {'u': 22,
         'g': 22,
         'r': 22,
         'i': 22,
         'z': 22}
-sky_mag = calculate_sky_magnitude(offset[filter], fli)
-f_nu_s = 10 ** (-0.4 *(sky_mag + 48.6))
-f_lambda_s = ((f_nu_s *c)/(CW[filter]**2)) * (10 **(-10)) #erg/cm2/A
-N_sky = (f_lambda_s*10**(-7) * (band_width[filter]*(10**(10))) * t * E[filter] * S *(10**4) * (pixel_scale**2)) / P
 
-#noise---------------------------------------------------------------------------------------------------------------------------------------
-noise = np.sqrt(signal + npix *(N_sky + readnoise**2) + t*dc*npix)
-print("SNR is" , (signal/noise))
+
+def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, t, E, S, get_fli, offset, calculate_sky_magnitude, readnoise):
+    # Signal calculation
+    airmass = airmass_function(year, month, day, hour, minute, RA, DEC)
+    npix = (np.pi * ((seeing / pixel_scale) ** 2)) / (binning ** 2)
+    P = ((h * c) / CW[filter])
+    m_corrected = m + (airmass * extiction[filter])
+    f_nu = 10 ** (-0.4 * (m_corrected + 48.6))
+    f_lambda = ((f_nu * c) / (CW[filter] ** 2)) * (10 ** (-10))  # erg/cm2/A
+    A = (f_lambda * 10 ** (-7) * (band_width[filter] * (10 ** (10))) *  E[filter] * S * (10 ** 4)) / P
+    signal = A * t
+
+    # Sky calculation
+    fli = get_fli(year, month, day, hour, minute)
+    sky_mag = calculate_sky_magnitude(offset[filter], fli)
+    f_nu_s = 10 ** (-0.4 * (sky_mag + 48.6))
+    f_lambda_s = ((f_nu_s * c) / (CW[filter] ** 2)) * (10 ** (-10))  # erg/cm2/A
+    C = (f_lambda_s * 10 ** (-7) * (band_width[filter] * (10 ** (10))) * E[filter] * S * (10 ** 4) * (pixel_scale ** 2)) / P
+    N_sky = C * t
+
+    # Noise calculation
+    B = npix * (N_sky + readnoise ** 2)
+    noise = np.sqrt(A * t  + B)
+
+    signal_to_noise = signal / noise
+    return signal_to_noise
+
+
+def solve_for_t(A, npix, C, readnoise, s):
+    a = A**2
+    b = -s**2 * (A + npix * C)
+    c = -s**2 * npix * readnoise**2
+
+    discriminant = b**2 - 4 * a * c
+
+    if discriminant < 0:
+        return None  # No real solution
+
+    t1 = (-b + math.sqrt(discriminant)) / (2 * a)
+    t2 = (-b - math.sqrt(discriminant)) / (2 * a)
+    if t1 >= 0 and t2 >= 0:
+        return min(t1, t2)
+    elif t1 >= 0:
+        return t1
+    elif t2 >= 0:
+        return t2
+
+
+def calculate_exposure_time(snr, year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, E, S, get_fli, offset, calculate_sky_magnitude, readnoise):
+    airmass = airmass_function(year, month, day, hour, minute, RA, DEC)
+    npix = (np.pi * ((seeing / pixel_scale) ** 2)) / (binning ** 2)
+    P = ((h * c) / CW[filter])
+    m_corrected = m + (airmass * extiction[filter])
+    f_nu = 10 ** (-0.4 * (m_corrected + 48.6))
+    f_lambda = ((f_nu * c) / (CW[filter] ** 2)) * (10 ** (-10))  # erg/cm2/A
+    A = (f_lambda * 10 ** (-7) * (band_width[filter] * (10 ** (10))) *  E[filter] * S * (10 ** 4)) / P
+    fli = get_fli(year, month, day, hour, minute)
+    sky_mag = calculate_sky_magnitude(offset[filter], fli)
+    f_nu_s = 10 ** (-0.4 * (sky_mag + 48.6))
+    f_lambda_s = ((f_nu_s * c) / (CW[filter] ** 2)) * (10 ** (-10))  # erg/cm2/A
+    C = (f_lambda_s * 10 ** (-7) * (band_width[filter] * (10 ** (10))) * E[filter] * S * (10 ** 4) * (pixel_scale ** 2)) / P
+    exposure_time = solve_for_t(A,npix,C,readnoise,snr)
+    return exposure_time
+
+
+if mode == 'snr':
+      SNR = calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, t, E, S, get_fli, offset, calculate_sky_magnitude, readnoise)
+      print("SNR is", SNR)
+
+if mode == 'exp':
+      t = calculate_exposure_time(snr, year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, E, S, get_fli, offset, calculate_sky_magnitude, readnoise)
+      print("Exposure time t is:", t)
