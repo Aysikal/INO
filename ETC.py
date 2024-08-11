@@ -1,9 +1,6 @@
 import numpy as np
 from functions import airmass_function , get_fli , calculate_sky_magnitude
 import math
-from astropy.utils.data import clear_download_cache
-clear_download_cache()
-
 
 #date and time
 mode = input("choose calculator mode. enter either (snr) for snr calculator or (exp) for exposure time calculator.")
@@ -30,7 +27,7 @@ DEC = input("DEC: ")
 print("enter magnitude in the chosen filter. note that the magnitude should be in the AB system.")
 m = float(input("magnitude: "))
 #system 
-
+full_well = 70000
 print("Binning is either 1x1 and 2x2, enter either 1 or 2 for each respectively.")
 binning = int(input("enter binning: "))
 filter = input("filter choose from u , g, r, i, z: ")
@@ -102,6 +99,12 @@ def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, 
     m_corrected = m + (airmass * extiction[filter])
     f_nu = 10 ** (-0.4 * (m_corrected + 48.6))
     f_lambda = ((f_nu * c) / (CW[filter] ** 2)) * (10 ** (-10))  # erg/cm2/A
+    '''
+    b = f_lambda * (band_width*(10**10))*(10**(-7)) * (10**4) #watt/m2 * S
+    center_pix = 2 * b * math.erf(pixel_scale/(2*(2**(-1/2)) * seeing))
+    if center_pix * t >= full_well:
+         print("CCD SATURATED!")
+    '''
     A = (f_lambda * 10 ** (-7) * (band_width[filter] * (10 ** (10))) *  E[filter] * S * (10 ** 4)) / P
     signal = A * t
 
