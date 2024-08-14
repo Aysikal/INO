@@ -1,8 +1,11 @@
 ############################################################################################################################################################
+#This the source code for INO exposure time calculator. 
+#this is only for point sources.
 #This code was written by Aysan Hemmati. on the summer of 2024. 
 #you can contact me for any additional questions or information via Email 
 #email address :aysanhemmatiortakand@gmail.com
 #github = https://github.com/Aysikal
+#documentation : https://docs.google.com/document/d/1D06Oxp0n3AuIE-N1idVbhhsnLQNO6vtncn_TaSSiS_Q/edit
 ############################################################################################################################################################
 import numpy as np
 from functions import airmass_function , get_fli , calculate_sky_magnitude
@@ -37,10 +40,17 @@ m = float(input("magnitude: "))
 full_well = 70000
 print("Binning is either 1x1 and 2x2, enter either 1 or 2 for each respectively.")
 binning = int(input("enter binning: "))
+print("choose from the following options for turbulence: optimal turbulence (0.6 - 0.8) , minimal turbulence (0.8 - 1) , moderate turbulence (1 - 1.3), high turbulence (1.3 - 1.5), very high turbulence (1.5 - 2)")
+seeing_conditions = input("Only type the name not the range. Example : minimal ")
+seeing_dict = {"optimal": 8,
+          "minimal" : 1,
+          "moderate": 1.3,
+          "high": 1.5,
+          "very high":2}
 
+seeing = seeing_dict[seeing_conditions]
 
 #fixed values:
-seeing = 1
 pixel_scale = 0.047
 dc = 0.08
 h = 6.62620 * 10**(-34)
@@ -120,6 +130,7 @@ def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, 
 
     signal_to_noise = signal / noise
     return signal_to_noise
+
 
 
 def solve_for_t(A, npix, C, readnoise, s):
