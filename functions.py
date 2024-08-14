@@ -1,3 +1,10 @@
+############################################################################################################################################################
+#This code was written by Aysan Hemmati. on the summer of 2024. 
+#you can contact me for any additional questions or information via Email 
+#email address :aysanhemmatiortakand@gmail.com
+#github = https://github.com/Aysikal
+############################################################################################################################################################
+
 from astropy.io import fits
 import numpy as np
 from astropy import units as u
@@ -5,7 +12,6 @@ from astropy.coordinates import SkyCoord, EarthLocation, AltAz
 from astropy.time import Time
 from astropy.coordinates import get_body
 import math
-
 
 def open_fits(path):
     fitsfile = fits.open(path)
@@ -43,11 +49,11 @@ def airmass_function(year, month, day , hour, minute, RA, DEC):
 
 def get_fli(year, month, day, hour, minute):
     # INO location
-    latitude = '33:40:28'
-    longitude = '51:19:08'
     elevation = 3600
-    location = EarthLocation(lat=33.674*u.deg, lon=51.3188*u.deg , height = elevation*u.meter)
-
+    #iran
+    #location = EarthLocation(lat=33.674*u.deg, lon=51.3188*u.deg , height = elevation*u.meter)
+    #eso
+    location = EarthLocation(lat=-24.6274*u.deg, lon=-70.4039*u.deg , height = elevation*u.meter)
 
     # Create the date_time string
     date_time_string = f"{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}:00"
