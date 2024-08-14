@@ -1,3 +1,9 @@
+############################################################################################################################################################
+#This code was written by Aysan Hemmati. on the summer of 2024. 
+#you can contact me for any additional questions or information via Email 
+#email address :aysanhemmatiortakand@gmail.com
+#github = https://github.com/Aysikal
+############################################################################################################################################################
 import numpy as np
 from functions import airmass_function , get_fli , calculate_sky_magnitude
 import math
@@ -7,7 +13,7 @@ mode = input("choose calculator mode. enter either (snr) for snr calculator or (
 print(mode)
 if mode == 'snr': 
       print("ATTENTION: exposure time should be in seconds")
-      t = int(input("Enter exposure time: "))
+      t = float(input("Enter exposure time: "))
 if mode == 'exp':
       snr = int(input("snr: "))
 
@@ -24,13 +30,14 @@ print("RA MUST be in the form of HH:MM:SS")
 RA = input("RA: ")
 print("DEC MUST be in the form of DD:MM:SS")
 DEC = input("DEC: ")
+filter = input("filter choose from u , g, r, i, z: ")
 print("enter magnitude in the chosen filter. note that the magnitude should be in the AB system.")
 m = float(input("magnitude: "))
 #system 
 full_well = 70000
 print("Binning is either 1x1 and 2x2, enter either 1 or 2 for each respectively.")
 binning = int(input("enter binning: "))
-filter = input("filter choose from u , g, r, i, z: ")
+
 
 #fixed values:
 seeing = 1
@@ -42,6 +49,7 @@ readnoise = 3.7
 D = 3.4 #m
 d = 0.6 #m
 S = np.pi*(D/2)**2 - np.pi*(d/2)**2 
+
 #effective wavelengths (Central Wavelength)
 CW = {'u': 3560 *10**(-10),
      'g': 4825 * 10**(-10),
@@ -55,21 +63,9 @@ band_width = {'u': 463 *10**(-10),
                 'r': 1340* 10**(-10),
                 'i': 1064 * 10**(-10),
                 'z': 1248 * 10**(-10)}
-# Fukugita et al. (1996)
-f0 = {'u': 859.5*(10**(-11)), #ergs/s/cm2/A
-      'g': 466.9*(10**(-11)),
-      'r': 278.0*(10**(-11)),
-      'i': 185.2*(10**(-11)),
-     'z': 131.5*(10**(-11))}
-
-# Fukugita et al. (1996)
-f0 = {'u': 8590.5*(10**(-11)), #watt/m2/um
-      'g': 4660.9*(10**(-11)),
-      'r': 2780.0*(10**(-11)),
-      'i': 1850.2*(10**(-11)),
-     'z': 1310.5*(10**(-11))}
 
 #problem values : ----------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#should be updated based on INO
 extiction = {'u': 0.2,
       'g': 0.2,
       'r': 0.2,
@@ -77,20 +73,22 @@ extiction = {'u': 0.2,
       'z': 0.2 }
 
 reflectivity = 0.6
+filter_reflection = 0.8
 
-E =   {'u': 0.1*(reflectivity)**2 * 0.9,
-      'g': 0.7*(reflectivity)**2 * 0.9,
-      'r': 0.75*(reflectivity)**2 * 0.9,
-      'i': 0.55*(reflectivity)**2 * 0.9,
-      'z': 0.2*(reflectivity)**2 * 0.9 }
+E =   {'u': 0.1*(reflectivity)**2 * filter_reflection,
+      'g': 0.7*(reflectivity)**2 * filter_reflection,
+      'r': 0.75*(reflectivity)**2 * filter_reflection,
+      'i': 0.55*(reflectivity)**2 * filter_reflection,
+      'z': 0.2*(reflectivity)**2 * filter_reflection }
 
+#SKY BACKGROUND MAGNITUDE WHEN NO MOON IS PRESENT.
 offset = {'u': 22,
         'g': 22,
         'r': 22,
         'i': 22,
         'z': 22}
 
-
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
 def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, t, E, S, get_fli, offset, calculate_sky_magnitude, readnoise):
     # Signal calculation
     airmass = airmass_function(year, month, day, hour, minute, RA, DEC)
