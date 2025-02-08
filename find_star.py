@@ -13,9 +13,9 @@ from matplotlib.patches import Rectangle
 from astropy.visualization import ImageNormalize, LogStretch
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 
-folder_path = r""
-save_directory = r""
-save_filename = ''
+folder_path = r"" #Adress to the folder containing the fits files
+save_directory = r"" #Adress to the folder where the file containing the coordinates to the stars.
+save_filename = '' #The name of the file containing the coordinates to the stars.
 
 def open_fits(path):
     with fits.open(path) as fitsfile:
