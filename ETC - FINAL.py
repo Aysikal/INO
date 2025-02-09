@@ -9,7 +9,7 @@
 import numpy as np
 import math
 
-#date and time
+#mode, date and time
 mode = input("choose calculator mode. enter either (snr) for snr calculator or (exp) for exposure time calculator.")
 print(mode)
 if mode == 'snr': 

@@ -11,7 +11,7 @@ import numpy as np
 from functions import airmass_function , get_fli , calculate_sky_magnitude
 import math
 
-#date and time
+#mode:
 mode = input("choose calculator mode. enter either (snr) for snr calculator or (exp) for exposure time calculator.")
 print(mode)
 if mode == 'snr': 
@@ -20,7 +20,7 @@ if mode == 'snr':
 if mode == 'exp':
       snr = int(input("snr: "))
 
-
+#date and time:
 print("ATTENTION: Time and date entries MUST be UTC")
 year = int(input("Enter the year: "))
 month = int(input("Enter the month (1-12): "))
@@ -33,14 +33,15 @@ print("RA MUST be in the form of HH:MM:SS")
 RA = input("RA: ")
 print("DEC MUST be in the form of DD:MM:SS")
 DEC = input("DEC: ")
-filter = input("filter choose from u , g, r, i, z: ")
-print("enter magnitude in the chosen filter. note that the magnitude should be in the AB system.")
+filter = input("filter choose from u' , g', r', i', z': ")
+print("enter magnitude in the chosen filter. Note that the magnitude should be in the AB system.")
 m = float(input("magnitude: "))
+
 #system 
 full_well = 70000
 print("Binning is either 1x1 and 2x2, enter either 1 or 2 for each respectively.")
 binning = int(input("enter binning: "))
-print("choose from the following options for turbulence: optimal turbulence (0.6 - 0.8) , minimal turbulence (0.8 - 1) , moderate turbulence (1 - 1.3), high turbulence (1.3 - 1.5), very high turbulence (1.5 - 2)")
+print("choose from the following options for turbulence: optimal turbulence (seeing: 0.6 - 0.8) , minimal turbulence (seeing: 0.8 - 1) , moderate turbulence (seeing: 1 - 1.3), high turbulence (seeing: 1.3 - 1.5), very high turbulence (seeing: 1.5 - 2)")
 seeing_conditions = input("Only type the name not the range. Example : minimal ")
 seeing_dict = {"optimal": 8,
           "minimal" : 1,
@@ -52,15 +53,15 @@ seeing = seeing_dict[seeing_conditions]
 
 #fixed values:
 pixel_scale = 0.047
-dc = 0.08
-h = 6.62620 * 10**(-34)
-c = 2.9979250 * 10**(8)
-readnoise = 3.7
-D = 3.4 #m
-d = 0.6 #m
-S = np.pi*(D/2)**2 - np.pi*(d/2)**2 
+dc = 0.08 #dark current
+h = 6.62620 * 10**(-34) #plank constant
+c = 2.9979250 * 10**(8) #speed of light
+readnoise = 3.7 #readnoise
+D = 3.4 # Telescope M1 diameter (m)
+d = 0.6 # Telescope M2 diameter (m)
+S = np.pi*(D/2)**2 - np.pi*(d/2)**2 # Mirror effective area
 
-#effective wavelengths (Central Wavelength)
+#Effective wavelengths (Central Wavelength)
 CW = {'u': 3560 *10**(-10),
      'g': 4825 * 10**(-10),
      'r': 6261 * 10**(-10),
@@ -68,7 +69,7 @@ CW = {'u': 3560 *10**(-10),
      'z': 9097 * 10**(-10)}
 
 # Fukugita et al. (1996)
-band_width = {'u': 463 *10**(-10),
+band_width = {  'u': 463 *10**(-10),
                 'g': 988 * 10**(-10),
                 'r': 1340* 10**(-10),
                 'i': 1064 * 10**(-10),
@@ -77,10 +78,10 @@ band_width = {'u': 463 *10**(-10),
 #problem values : ----------------------------------------------------------------------------------------------------------------------------------------------------------------#
 #should be updated based on INO
 extiction = {'u': 0.2,
-      'g': 0.2,
-      'r': 0.2,
-      'i': 0.2,
-      'z': 0.2 }
+             'g': 0.2,
+             'r': 0.2,
+             'i': 0.2,
+             'z': 0.2 }
 
 reflectivity = 0.6
 filter_reflection = 0.8
@@ -93,10 +94,10 @@ E =   {'u': 0.1*(reflectivity)**2 * filter_reflection,
 
 #SKY BACKGROUND MAGNITUDE WHEN NO MOON IS PRESENT.
 offset = {'u': 22,
-        'g': 22,
-        'r': 22,
-        'i': 22,
-        'z': 22}
+          'g': 22,
+          'r': 22,
+          'i': 22,
+          'z': 22}
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------
 def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, binning, h, c, CW, filter, m, extiction, band_width, t, E, S, get_fli, offset, calculate_sky_magnitude, readnoise):
@@ -127,7 +128,6 @@ def calculate_snr(year, month, day, hour, minute, RA, DEC, seeing, pixel_scale, 
     # Noise calculation
     B = npix * (N_sky + readnoise ** 2)
     noise = np.sqrt(A * t  + B)
-
     signal_to_noise = signal / noise
     return signal_to_noise
 

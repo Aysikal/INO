@@ -124,3 +124,6 @@ def calculate_sky_magnitude(offset , fli):
 
     return sky_magnitude
 
+
+
+
