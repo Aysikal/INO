@@ -1,9 +1,7 @@
-#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
-#This code was written by Aysan Hemmati. In winter of 2025 
-#you can contact me for any additional questions or information via Email 
-#email address :aysanhemmatiortakand@gmail.com
-#github = https://github.com/Aysikal
-#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
+# This code was written by Aysan Hemmati. In the winter of 2025
+# You can contact me for any additional questions or information via Email 
+# Email address: aysanhemmatiortakand@gmail.com
+# GitHub: https://github.com/Aysikal
 
 import os
 import numpy as np
@@ -12,6 +10,7 @@ from astropy.io import fits
 from photutils.aperture import CircularAperture, CircularAnnulus, aperture_photometry
 from astropy.visualization import simple_norm
 from scipy.optimize import curve_fit
+from scipy.ndimage import gaussian_filter1d
 
 # Define the Gaussian function
 def gaussian(x, A, mu, sigma):
@@ -21,9 +20,9 @@ def gaussian(x, A, mu, sigma):
 # Flexible values: 
 box_size = 200  # Size of the star box 
 pixel_scale = 0.047  # arcseconds per pixel
-color = 'YlGn' # for green
-filter = "green" #choose filter color
-mode = "High" #choose gain mode high/low
+color = "Reds"  # r filter: "Oranges", g filter : "Greens", u filter = "Purples", i filter : "Reds"
+filter = "i"  # choose filter color
+mode = "High"  # choose gain mode high/low
 folder_path = r""  # Location of your images
 star_coordinates_loc = r""  # Location of the coordinates
 specific_plot_idx = 0  # Index of the specific plot to display separately (0-based index)
@@ -49,6 +48,7 @@ def calculate_radial_profile(data, center, max_radius):
     
     radialprofile = np.zeros_like(tbin, dtype=float)
     radialprofile[nr > 0] = tbin[nr > 0] / nr[nr > 0]
+    radialprofile = gaussian_filter1d(radialprofile, sigma=2)
     return radialprofile
 
 def calculate_com(data):
@@ -59,7 +59,7 @@ def calculate_com(data):
     return com_x, com_y
 
 def calculate_hwhm(profile):
-    half_max = np.max(profile) / 2.0
+    half_max = (np.max(profile) + np.median(profile[-15:])) / 2.0
     closest_index = np.argmin(np.abs(profile - half_max))
     return closest_index
 
@@ -119,7 +119,7 @@ axes = axes.flatten()
 for idx, (ax, radial_profile) in enumerate(zip(axes, radial_profiles)):
     ax.plot(radial_profile, label='Radial Profile')
     
-    half_max = np.max(radial_profile) / 2.0
+    half_max = (np.max(radial_profile) + np.median(radial_profile [-10:])) / 2.0
     ax.axhline(y=half_max, color='r', linestyle='--', label='Half-Maximum Line')
     
     com = com_positions_in_boxes[idx]
@@ -144,9 +144,10 @@ plt.tight_layout()
 # Plot the specified radial profile separately
 fig, ax = plt.subplots(figsize=(8, 6))
 radial_profile = radial_profiles[specific_plot_idx]
+print(radial_profile)
 ax.plot(radial_profile, label='Radial Profile')
 
-half_max = np.max(radial_profile) / 2.0
+half_max = (np.max(radial_profile) + np.median(radial_profile [-10:]))/2
 ax.axhline(y=half_max, color='r', linestyle='--', label='Half-Maximum Line')
 
 com = com_positions_in_boxes[specific_plot_idx]
@@ -186,41 +187,31 @@ ax.set_xlabel('FWHM (arcseconds)', fontsize=12)
 ax.set_ylabel('Density', fontsize=12)
 ax.set_title('Histogram of FWHM values', fontsize=12)
 ax.legend(fontsize=10)
-plt.tight_layout()
 
 median_fwhm = np.mean(FWHM_arcsec)
 ax.text(0.6, 0.95, f'Median seeing for gd246 {filter} filter ({mode}): {median_fwhm:.2f} arcseconds',
         verticalalignment='top', horizontalalignment='right',
         transform=ax.transAxes, fontsize=10)
-plt.show()
+plt.tight_layout()
+#plt.show()
 
-print(f"Median seeing for gd246 {filter} filter ({mode}) is {median_fwhm}")
-#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
-"""
-# Initial guess for the parameters (A, mu, sigma)
-initial_guess = [max(counts), np.mean(FWHM), np.std(FWHM)]
+# Create the grid plot for the star boxes
+fig_box, ax_box = plt.subplots(grid_size, grid_size, figsize=(15, 15))
+axes_box = ax_box.flatten()
 
-# Fit the Gaussian function to the histogram data
-popt, pcov = curve_fit(gaussian, bin_centers, counts, p0=initial_guess)
+for idx, (ax, box) in enumerate(zip(axes_box, star_boxes)):
+    norm = simple_norm(box, 'sqrt', percent=99)
+    ax.imshow(box, origin='lower', cmap=color, norm=norm)
+    ax.set_title(f'Star Box {idx+1}', fontsize=7, pad=3)
+    ax.tick_params(axis='both', which='major', labelsize=7, length=3, width=0.5)
+    # Remove axes ticks
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-# Print the fitted parameters
-mu = popt[1]
-sigma = popt[2]
-print(f"Fitted parameters: mean={mu:.2f}, sigma={sigma:.2f}")
-
-# Generate fitted data
-x_fit = np.linspace(min(FWHM), max(FWHM), 1000)
-y_fit = gaussian(x_fit, *popt)
-
-# Plotting the histogram and Gaussian fit
-ax.hist(FWHM, bins=60, edgecolor='k', alpha=0.6, label='Data')
-ax.plot(x_fit, y_fit, color='red', linewidth=2, label=f'Gaussian Fit\n$\mu={mu:.2f}$, $\sigma={sigma:.2f}$')
-ax.set_xlabel('FWHM (pixels)', fontsize=12)
-ax.set_ylabel('Density', fontsize=12)
-ax.set_title('Histogram of FWHM values with Gaussian Fit', fontsize=12)
-ax.legend(fontsize=10)
+# Hide any empty subplots
+for ax in axes_box[num_profiles:]:
+    ax.axis('off')
 
 plt.tight_layout()
+plt.subplots_adjust(hspace=0.5, wspace=0.5)
 plt.show()
-"""
-#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
