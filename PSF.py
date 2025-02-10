@@ -22,8 +22,10 @@ def gaussian(x, A, mu, sigma):
 box_size = 200  # Size of the star box 
 pixel_scale = 0.047  # arcseconds per pixel
 color = 'YlGn' # for green
-folder_path = r"C:\Users\AYSAN\Desktop\project\INO\gd246\g\high"  # Location of your images
-star_coordinates_loc = r"C:\Users\AYSAN\Desktop\project\INO\star coordinates\Star_Coordinates_for_Green_Filter_High_gd246.npy"  # Location of the coordinates
+filter = "green" #choose filter color
+mode = "High" #choose gain mode high/low
+folder_path = r""  # Location of your images
+star_coordinates_loc = r""  # Location of the coordinates
 specific_plot_idx = 0  # Index of the specific plot to display separately (0-based index)
 #════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
 
@@ -186,13 +188,13 @@ ax.set_title('Histogram of FWHM values', fontsize=12)
 ax.legend(fontsize=10)
 plt.tight_layout()
 
-mean_fwhm = np.mean(FWHM_arcsec)
-ax.text(0.6, 0.95, f'Mean seeing for gd246 green filter (High): {mean_fwhm:.2f} arcseconds',
+median_fwhm = np.mean(FWHM_arcsec)
+ax.text(0.6, 0.95, f'Median seeing for gd246 {filter} filter ({mode}): {median_fwhm:.2f} arcseconds',
         verticalalignment='top', horizontalalignment='right',
         transform=ax.transAxes, fontsize=10)
 plt.show()
 
-print(f"Seeing for gd246 green filter (High) is {np.mean(FWHM)}")
+print(f"Median seeing for gd246 {filter} filter ({mode}) is {median_fwhm}")
 #════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
 """
 # Initial guess for the parameters (A, mu, sigma)
