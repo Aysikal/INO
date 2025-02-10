@@ -1,10 +1,3 @@
-############################################################################################################################################################
-#This code was written by Aysan Hemmati. In winter of 2025 
-#you can contact me for any additional questions or information via Email 
-#email address :aysanhemmatiortakand@gmail.com
-#github = https://github.com/Aysikal
-############################################################################################################################################################
-
 import os
 from astropy.io import fits
 import numpy as np
@@ -13,9 +6,9 @@ from matplotlib.patches import Rectangle
 from astropy.visualization import ImageNormalize, LogStretch
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 
-folder_path = r"" #location to where the images are located
-save_directory = r""#loaction to where you want to save the star coordiantes
-save_filename = "" #The name you want to give the star coordinates file
+folder_path = r"C:\Users\AYSAN\Desktop\project\INO\gd246\g\low"  # location to where the images are located
+save_directory = r"C:\Users\AYSAN\Desktop\project\INO\star coordinates"  # location to where you want to save the star coordinates
+save_filename = "Star_Coordinates_for_Green_Filter_low_gd246"  # The name you want to give the star coordinates file
 
 def open_fits(path):
     with fits.open(path) as fitsfile:
@@ -26,7 +19,7 @@ def log_scale_plot_with_magnifier(image_data, plot_title, colorbar_title):
     norm = ImageNormalize(vmin=0., stretch=LogStretch())
 
     fig, ax = plt.subplots(figsize=(10, 8))
-    im = ax.imshow(image_data, origin="lower", norm=norm, cmap='gray_r')
+    im = ax.imshow(image_data, origin="lower", norm=norm, cmap='gray_r')  
     ax.set_title(plot_title)
     cbar = fig.colorbar(im)
     cbar.set_label(colorbar_title)
@@ -35,7 +28,7 @@ def log_scale_plot_with_magnifier(image_data, plot_title, colorbar_title):
     zoom_factor = 5  # Increased zoom factor for larger magnification
     axins_size = 2  # Size of the inset axes
     axins = zoomed_inset_axes(ax, zoom=zoom_factor, loc='upper right', borderpad=1)
-    axins.imshow(image_data, origin="lower", norm=norm, cmap='gray_r')
+    axins.imshow(image_data, origin="lower", norm=norm, cmap='viridis')
     axins.set_xlim(0, 1)
     axins.set_ylim(0, 1)
     axins.axis('off')  # Hide axes ticks and labels
@@ -72,7 +65,6 @@ def log_scale_plot_with_magnifier(image_data, plot_title, colorbar_title):
     motion_cid = fig.canvas.mpl_connect('motion_notify_event', on_mouse_move)
 
     return fig, ax
-
 
 image_files = []
 coordinates = []
@@ -113,7 +105,6 @@ for idx, file_path in enumerate(image_files):
 coordinates = np.array(coordinates)
 print("Coordinates of selected points:")
 print(coordinates)
-
 
 save_path = os.path.join(save_directory, save_filename)
 
