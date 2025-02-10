@@ -3,20 +3,22 @@ from astropy.io import fits
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-from astropy.visualization import ImageNormalize, LogStretch
+from astropy.visualization import ImageNormalize, ZScaleInterval
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 
-folder_path = r"C:\Users\AYSAN\Desktop\project\INO\gd246\g\low"  # location to where the images are located
-save_directory = r"C:\Users\AYSAN\Desktop\project\INO\star coordinates"  # location to where you want to save the star coordinates
-save_filename = "Star_Coordinates_for_Green_Filter_low_gd246"  # The name you want to give the star coordinates file
+folder_path = r""  # location to where the images are located
+save_directory = r""  # location to where you want to save the star coordinates
+save_filename = ""  # The name you want to give the star coordinates file
 
 def open_fits(path):
     with fits.open(path) as fitsfile:
         file = fitsfile[0].data
         return file
 
-def log_scale_plot_with_magnifier(image_data, plot_title, colorbar_title):
-    norm = ImageNormalize(vmin=0., stretch=LogStretch())
+def zscale_plot_with_magnifier(image_data, plot_title, colorbar_title):
+    interval = ZScaleInterval()
+    vmin, vmax = interval.get_limits(image_data)
+    norm = ImageNormalize(vmin=vmin, vmax=vmax)
 
     fig, ax = plt.subplots(figsize=(10, 8))
     im = ax.imshow(image_data, origin="lower", norm=norm, cmap='gray_r')  
@@ -94,7 +96,7 @@ for idx, file_path in enumerate(image_files):
     # Display the image using the updated function
     plot_title = f'Image {idx+1}/{len(image_files)}: Click on reference star'
     colorbar_title = 'Pixel Intensity'
-    fig, ax = log_scale_plot_with_magnifier(data, plot_title, colorbar_title)
+    fig, ax = zscale_plot_with_magnifier(data, plot_title, colorbar_title)
 
     # Connect the click event
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
