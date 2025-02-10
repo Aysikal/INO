@@ -1,3 +1,10 @@
+#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
+#This code was written by Aysan Hemmati. In winter of 2025 
+#you can contact me for any additional questions or information via Email 
+#email address :aysanhemmatiortakand@gmail.com
+#github = https://github.com/Aysikal
+#════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════#
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
