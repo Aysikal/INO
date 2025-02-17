@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 # Variables
 mode = "high"
+output_dir = r"C:\Users\AYSAN\Desktop\project\INO\Gain plots"
 dark_folder_path_1min_bin1_high = r"C:\Users\AYSAN\Desktop\project\INO\darks\dark_1min_bin1\High"
 dark_folder_path_1s_bin1_high = r"C:\Users\AYSAN\Desktop\project\INO\darks\dark_1s\High"
 dark_folder_path_2s_bin1_high = r"C:\Users\AYSAN\Desktop\project\INO\darks\dark_2s\High"
@@ -40,7 +41,6 @@ def get_masterdark_and_masterbias(dark_path, bin):
             file = fitsfile[0].data
             return file
 
-
     files = []
     for idx, filename in enumerate(os.listdir(dark_path)):
         if filename.endswith('.fit') or filename.endswith('.fits'):  # Ensure we're only reading FIT/FITS files
@@ -53,7 +53,7 @@ def get_masterdark_and_masterbias(dark_path, bin):
     stack_files = np.stack(files, axis=0)
     mean_sum_files = np.mean(stack_files, axis=0)
 
-    box = mean_sum_files[int(1000/bin):int(3000/bin), int(1000/bin):int(3000/bin)]
+    box = mean_sum_files[int(1000/np.sqrt(bin)):int(3000/np.sqrt(bin)), int(1000/np.sqrt(bin)):int(3000/np.sqrt(bin))]
     box_rms = calculate_rms(box)
     box_mean = np.mean(box)
 
@@ -83,20 +83,22 @@ rms_fit_line = np.poly1d(rms_fit)
 
 # Plot Mean Value vs. Exposure time with fit line
 plt.scatter(dark_exposures, means, label='Data')
-plt.plot(dark_exposures, mean_fit_line(dark_exposures), color='red', label=f'Fit Line: y = {mean_fit[0]:.2f}x + {mean_fit[1]:.2f}')
+plt.plot(dark_exposures, mean_fit_line(dark_exposures), color='red', label=f'Fit Line: y = {mean_fit[0]:.4f}x + {mean_fit[1]:.4f}')
 plt.title(f"Mean Value vs. Exposure time for {mode} mode")
 plt.xlabel("Exposure Time (s)")
 plt.ylabel("Mean Value (counts)")
 plt.legend()
+plt.savefig(os.path.join(output_dir, "Mean Value vs. Exposure time for high mode.png"))
 plt.show()
 
 # Plot RMS vs. Exposure time with fit line
 plt.scatter(dark_exposures, RMSs, label='Data')
-plt.plot(dark_exposures, rms_fit_line(dark_exposures), color='red', label=f'Fit Line: y = {rms_fit[0]:.2f}x + {rms_fit[1]:.2f}')
+plt.plot(dark_exposures, rms_fit_line(dark_exposures), color='red', label=f'Fit Line: y = {rms_fit[0]:.4f}x + {rms_fit[1]:.4f}')
 plt.title(f"RMS vs. Exposure time for {mode} mode")
 plt.xlabel("Exposure Time (s)")
 plt.ylabel("RMS")
 plt.legend()
+plt.savefig(os.path.join(output_dir, "RMS vs. Exposure time for high mode.png"))
 plt.show()
 
 # Fit line to mean values
@@ -107,19 +109,22 @@ mean_fit_line_bias = np.poly1d(mean_fit)
 rms_fit = np.polyfit(dark_exposures, RMSs_minus_bias, 1)
 rms_fit_line_bias = np.poly1d(rms_fit)
 
+# Plot Mean Value vs. Exposure time (Dark minus Bias) with fit line
 plt.scatter(dark_exposures, means_minus_bias, label='Data')
-plt.plot(dark_exposures, mean_fit_line_bias(dark_exposures), color='red', label=f'Fit Line: y = {mean_fit[0]:.2f}x + {mean_fit[1]:.2f}')
+plt.plot(dark_exposures, mean_fit_line_bias(dark_exposures), color='red', label=f'Fit Line: y = {mean_fit[0]:.4f}x + {mean_fit[1]:.4f}')
 plt.title(f"Mean Value vs. Exposure time for {mode} mode (Dark minus Bias)")
 plt.xlabel("Exposure Time (s)")
 plt.ylabel("Mean Value (counts)")
 plt.legend()
+plt.savefig(os.path.join(output_dir, "Mean Value vs. Exposure time for high mode (Dark minus Bias).png"))
 plt.show()
 
 # Plot RMS vs. Exposure time with fit line (Dark minus Bias)
 plt.scatter(dark_exposures, RMSs_minus_bias, label='Data')
-plt.plot(dark_exposures, rms_fit_line_bias(dark_exposures), color='red', label=f'Fit Line: y = {rms_fit[0]:.2f}x + {rms_fit[1]:.2f}')
+plt.plot(dark_exposures, rms_fit_line_bias(dark_exposures), color='red', label=f'Fit Line: y = {rms_fit[0]:.4f}x + {rms_fit[1]:.4f}')
 plt.title(f"RMS vs. Exposure time for {mode} mode (Dark minus Bias)")
 plt.xlabel("Exposure Time (s)")
 plt.ylabel("RMS")
 plt.legend()
+plt.savefig(os.path.join(output_dir, "RMS vs. Exposure time for high mode (Dark minus Bias).png"))
 plt.show()
